@@ -14,7 +14,7 @@ def get_survey_name():
     # Get URL parameters
     params = st.experimental_get_query_params()
     # Get the name parameter
-    name = params.get('s', ['survey'])[0]
+    name = params.get('s', [''])[0]
     # Return the name in lowercase
     return name.lower()
 

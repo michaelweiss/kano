@@ -4,6 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+import os
+import re
+
+# Host and port for the survey app
+HOST = "localhost"
+PORT = 8501
+
 # Create a Kano analysis app that reads the user's ratings of features and
 # plots them on a Kano chart (using a scatter plot)
 
@@ -14,9 +21,35 @@ def get_survey_name():
     # Get URL parameters
     params = st.experimental_get_query_params()
     # Get the name parameter
-    name = params.get('s', ['survey'])[0]
+    name = params.get('s', [''])[0]
     # Return the name in lowercase
     return name.lower()
+
+# Check if the file for the survey exists
+def check_survey_name(survey_name):
+    # Check if the file exists
+    if os.path.exists(f"surveys/{survey_name}.txt"):
+        return True
+    return False
+
+# Check if the file for the survey data exists
+def check_survey_data(survey_name):
+    # Check if the file exists
+    if os.path.exists(f"data/{survey_name}.csv"):
+        return True
+    return False
+
+# Check if the survey name is well-formed
+# The name must be a single word with only letters and numbers, dashes and underscores
+def is_survey_name_well_formed(survey_name):
+    # Check if the name contains only letters, numbers, dashes and underscores
+    # using a regular expression
+    return re.match(r'^[a-zA-Z0-9_-]+$', survey_name)
+
+# Save the feature names for a new survey
+def save_survey(survey_name, feature_names):
+    with open(f"surveys/{survey_name}.txt", 'w') as f:
+        f.write(f"{feature_names}")
 
 # Each feature is rated on a scale with the levels listed below
 levels = ["Like it", "Expect it", "Don't care", "Can live with it", "Dislike it"]
@@ -121,13 +154,29 @@ survey_name = get_survey_name()
 if not survey_name:
     survey_name = st.text_input('Enter the name of the survey', value='')
 
-if survey_name:
-    # Read the features from the file
-    df = get_feature_ratings(survey_name)
-    # Show the features and their ratings
-    st.subheader('Survey data')
-    st.dataframe(df)
-
-    # Plot the data on a Kano chart
-    st.subheader('Kano chart')
-    plot_kano(df)
+# Check if the survey name is well-formed
+# If it is, and the survey exists, read the features from the file and show the Kano chart
+# Else, show a form to create a new survey
+if not is_survey_name_well_formed(survey_name):
+    st.error('The survey name must be a single word with only letters and numbers, dashes and underscores')
+elif check_survey_name(survey_name):
+    # Create a link to the survey
+    st.markdown(f'[Take the survey](http://{HOST}:{PORT}/?s={survey_name})')
+    if check_survey_data(survey_name):
+        # Read the features from the file
+        df = get_feature_ratings(survey_name)
+        # Show the features and their ratings
+        st.subheader('Survey data')
+        st.dataframe(df)
+        # Plot the data on a Kano chart
+        plot_kano(df)
+    else:
+        st.error('There is no data for this survey. Please take the survey.')
+else:
+    with st.form(key='new_survey'):
+        feature_names = st.text_area("New survey (enter one feature per line)", height=150)
+        new_survey_submitted = st.form_submit_button("Create survey")
+    
+    # Save the survey if the user submitted the form
+    if new_survey_submitted:
+        save_survey(survey_name, feature_names)
