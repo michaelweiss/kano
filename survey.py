@@ -18,6 +18,15 @@ def get_survey_name():
     # Return the name in lowercase
     return name.lower()
 
+# Read the features from the file
+def get_features():
+    # Get the name of the survey
+    survey_name = get_survey_name()
+    # Read the features from the file
+    with open(f"surveys/{survey_name}.txt") as f:
+        features = f.read().splitlines()
+    return features
+
 # Acquire the lock
 def acquire_lock(lockfile):
     # Try to acquire the lock every 1 second for 5 seconds
@@ -38,18 +47,28 @@ def release_lock(lockfile):
     # Release the lock from the lockfile
     os.remove(lockfile)
 
+# Ask the user questions about the features
+def ask_about_features(features):
+    # Create a list to hold the answers
+    answers = []
+    # Ask the user a question about each feature
+    for feature in features:
+        answer = ask_about_one_feature(feature)
+        answers.append(answer)
+    return answers
+
 # Ask the user a question about a feature and return the answer
-def ask_about_feature(feature):
+def ask_about_one_feature(feature):
     st.info(feature)
     answer = st.radio("How would you feel about this feature?", levels, key=f"{feature}")
     return answer
 
-# Add the answer to the file
+# Add the answers to the file
 # The file is a CSV file with the following columns: feature and answer
-def add_answer(filename, feature, answer):
-    # Append the answer to the file
+def add_answers(filename, features, answers):
     with open(filename, 'a') as f:
-        f.write(f"{feature},{answer}\n")
+        for feature, answer in zip(features, answers):
+            f.write(f"{feature},{answer}\n")
 
 st.header('Survey')
 st.markdown('''
@@ -58,7 +77,8 @@ This is a survey app.
 
 # Create a form with a feature and a submit button
 with st.form(key='survey'):
-    feature1 = ask_about_feature("Feature 1")
+    features = get_features()
+    answers = ask_about_features(features)
     survey_submitted = st.form_submit_button(label='Submit')
 
 # When the user submits the form, add the answer to the file
@@ -66,9 +86,9 @@ if survey_submitted:
     # Get the name of the survey
     survey_name = get_survey_name()
     # To prevent multiple users from adding to the same file, the file is locked
-    if acquire_lock(f"{survey_name}.lock"):
-        add_answer(f"{survey_name}.csv", 'Feature 1', feature1)
-        release_lock(f"{survey_name}.lock")
+    if acquire_lock(f"data/{survey_name}.lock"):
+        add_answers(f"data/{survey_name}.csv", features, answers)
+        release_lock(f"data/{survey_name}.lock")
     else:
         st.error("A problem occurred. Try again later.")
 

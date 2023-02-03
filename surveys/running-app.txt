@@ -1,0 +1,5 @@
+Route search
+Training schedule
+GPS tracking
+Weather info
+Social media integration
