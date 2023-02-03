@@ -1,5 +1,5 @@
 # Kano model
-This is an all-in-one app that can be used to survey users and create a Kano model from the survey results. The goal was to create that does not require another app (eg Google forms) to administer a survey, and would make it easy to create a Kano model from the survey results.
+This app can be used to survey users and create a Kano model from the survey results. The goal was to create that does not require another app (eg Google forms) to administer a survey, and would make it easy to create a Kano model from the survey results.
 
 ![Kano model](images/kano-model.png)
 
@@ -27,3 +27,6 @@ Use the Kano app to create your first survey. Simply enter the name of the surve
 Next, use the "Take a survey" link to connect to the Survey app. Share this survey link with your users and ask them to complete the survey questions.
 
 Once you have some survey data, you can produce a Kano model in the Kano app. If the survey name is not already set, enter the name of the survey to load it. To update an existing Kano model as you add survey data, click the "Refresh" button.
+
+# Credits
+The design of the app was inspired by existing apps and products, in particular [kanochart.com](http://kanochart.com).
