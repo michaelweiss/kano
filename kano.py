@@ -9,6 +9,15 @@ import seaborn as sns
 
 # Each survey has a name that (in lowercase) is used as the filename for the survey
 
+# Get the name of the survey from the URL
+def get_survey_name():
+    # Get URL parameters
+    params = st.experimental_get_query_params()
+    # Get the name parameter
+    name = params.get('s', ['survey'])[0]
+    # Return the name in lowercase
+    return name.lower()
+
 # Each feature is rated on a scale with the levels listed below
 levels = ["Like it", "Expect it", "Don't care", "Can live with it", "Dislike it"]
 
@@ -42,9 +51,17 @@ def get_feature_ratings(survey_name):
 # Convert the ratings to a scale of 1 to 5
 def convert_ratings(df):
     # Convert the functional ratings to a scale of 1 to 5 using rating()
-    df['Functional'] = df['Functional'].apply(rating)
+    df['Functional'] = df['Functional'].apply(lambda x: rating(x, True))
     # Convert the dysfunctional ratings to a scale of 1 to 5 using rating() with inverse=True
-    df['Dysfunctional'] = df['Dysfunctional'].apply(lambda x: rating(x, True))
+    df['Dysfunctional'] = df['Dysfunctional'].apply(lambda x: rating(x))
+    return df
+
+# Compute the average functional and dysfunctional ratings for each feature
+def compute_average_ratings(df):
+    # Group the data by feature and compute the average functional and dysfunctional ratings
+    df = df.groupby('Feature').mean()
+    # Reset the index to make the feature names a column
+    df = df.reset_index()
     return df
 
 # Plot the data on a Kano chart
@@ -55,6 +72,15 @@ def plot_kano(df):
     # Subtract 1 from each value to make the scale 0 to 4 to plot the data
     df['Functional'] = df['Functional'] - 1
     df['Dysfunctional'] = df['Dysfunctional'] - 1
+
+    # Compute the average functional and dysfunctional ratings for each feature
+    df = compute_average_ratings(df)
+
+    st.markdown('''
+    The Kano chart shows the average functional and dysfunctional ratings for each feature.
+    ''')
+    with st.expander('Show average values'):
+        st.dataframe(df)
 
     # Create a scatter plot
     fig, ax = plt.subplots()
@@ -70,8 +96,8 @@ def plot_kano(df):
     plt.ylim(-0.5, 4.5)
 
     # Set the x and y axes labels
-    plt.xlabel('Dysfunctional')
-    plt.ylabel('Functional')
+    plt.xlabel('Dysfunctional (absence)')
+    plt.ylabel('Functional (presence)')
 
     # Set the x and y axes ticks
     plt.xticks(np.arange(0, 5, 1))
@@ -90,13 +116,16 @@ Kano analysis is a method for analyzing customer requirements.
 It is used to identify the features that customers want and the features that customers do not want. 
 ''')
 
-survey_name = st.text_input('Enter the name of the survey', value='')
+# Get the name of the survey either from the URL from the user
+survey_name = get_survey_name()
+if not survey_name:
+    survey_name = st.text_input('Enter the name of the survey', value='')
 
 if survey_name:
     # Read the features from the file
     df = get_feature_ratings(survey_name)
     # Show the features and their ratings
-    st.subheader('Features')
+    st.subheader('Survey data')
     st.dataframe(df)
 
     # Plot the data on a Kano chart

@@ -62,9 +62,9 @@ def ask_about_one_feature(feature):
     st.info(feature)
     col1, col2 = st.columns(2)
     with col1:
-        functional = st.radio("How would you feel about this feature?", levels, key=f"{feature} F")
+        functional = st.radio("How would you feel if the product had this feature?", levels, key=f"{feature} F")
     with col2:
-        dysfunctional = st.radio("How would you feel if there was no such feature?", levels, key=f"{feature} D")
+        dysfunctional = st.radio("How would you feel if the product did not have this feature?", levels, key=f"{feature} D")
     return functional, dysfunctional
 
 # Add the answers to the file
