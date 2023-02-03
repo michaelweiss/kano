@@ -1,5 +1,5 @@
 # Kano model
-This app can be used to survey users and create a Kano model from the survey results. The goal was to create that does not require another app (eg Google forms) to administer a survey, and would make it easy to create a Kano model from the survey results.
+This app can be used to survey users and create a Kano model from those survey results. The goal was to create an all-in-one app that does not require another app (eg Google forms) to administer a survey, and would make it easy to create a Kano model from those survey results.
 
 ![Kano model](images/kano-model.png)
 
