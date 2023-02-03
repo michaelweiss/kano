@@ -83,9 +83,9 @@ def get_feature_ratings(survey_name):
 
 # Convert the ratings to a scale of 1 to 5
 def convert_ratings(df):
-    # Convert the functional ratings to a scale of 1 to 5 using rating()
+    # Convert the functional ratings to a scale of 1 to 5 using rating() with inverse=True
     df['Functional'] = df['Functional'].apply(lambda x: rating(x, True))
-    # Convert the dysfunctional ratings to a scale of 1 to 5 using rating() with inverse=True
+    # Convert the dysfunctional ratings to a scale of 1 to 5 using rating()
     df['Dysfunctional'] = df['Dysfunctional'].apply(lambda x: rating(x))
     return df
 
