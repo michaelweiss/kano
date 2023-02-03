@@ -6,6 +6,7 @@ import seaborn as sns
 
 import os
 import re
+import textwrap
 
 # Host and port for the survey app
 HOST = "localhost"
@@ -97,6 +98,11 @@ def compute_average_ratings(df):
     df = df.reset_index()
     return df
 
+# Create a multi-line string from a string
+def multi_line_text(txt, max_width=12):
+    lines = textwrap.wrap(txt, width=max_width, break_long_words=False)
+    return '\n'.join(lines)
+
 # Plot the data on a Kano chart
 def plot_kano(df):
     # Convert the ratings from levels to values on a scale of 1 to 5
@@ -117,12 +123,15 @@ def plot_kano(df):
 
     # Create a scatter plot
     fig, ax = plt.subplots()
-    # Plot data points as blue circles of size 100
-    ax.scatter(df['Dysfunctional'], df['Functional'], color='blue', s=100)
+    # Plot data points as light blue circles of size 100
+    ax.scatter(df['Dysfunctional'], df['Functional'], c='lightblue', s=100)
 
     # Annotation for each data point with feature name
     for i, txt in enumerate(df['Feature']):
-        ax.annotate(txt, (df['Dysfunctional'][i] + 0.1, df['Functional'][i] + 0.1))
+        # Place text above and at the center of the data point
+        # Limit the number of characters in each line to max length of 10
+        ax.annotate(multi_line_text(txt), 
+            (df['Dysfunctional'][i], df['Functional'][i]), ha='center', va='center')
 
     # Set the x and y axes limits
     plt.xlim(-0.5, 4.5)
@@ -162,18 +171,26 @@ if not is_survey_name_well_formed(survey_name):
 elif check_survey_name(survey_name):
     # Create a link to the survey
     st.markdown(f'[Take the survey](http://{HOST}:{PORT}/?s={survey_name})')
+    # Reload the page to refresh the data
+    st.button('Refresh')
     if check_survey_data(survey_name):
         # Read the features from the file
         df = get_feature_ratings(survey_name)
         # Show the features and their ratings
         st.subheader('Survey data')
         st.dataframe(df)
+        # Download survey data
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(label='Download survey data', data=csv, file_name=f'{survey_name}.csv', mime='text/csv')
         # Plot the data on a Kano chart
         plot_kano(df)
     else:
         st.error('There is no data for this survey. Please take the survey.')
 else:
     with st.form(key='new_survey'):
+        st.markdown('''
+        This survey does not yet exist. You can create it by entering the features you want to ask about.
+        ''')
         feature_names = st.text_area("New survey (enter one feature per line)", height=150)
         new_survey_submitted = st.form_submit_button("Create survey")
     
