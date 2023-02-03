@@ -4,14 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-st.header('Kano analysis')
-st.markdown('''
-Kano analysis is a method for analyzing customer requirements. 
-It is used to identify the features that customers want and the features that customers do not want. 
-''')
+# Create a Kano analysis app that reads the user's ratings of features and
+# plots them on a Kano chart (using a scatter plot)
 
+# Each survey has a name that (in lowercase) is used as the filename for the survey
+
+# Each feature is rated on a scale with the levels listed below
 levels = ["Like it", "Expect it", "Don't care", "Can live with it", "Dislike it"]
 
+# Convert a level to a value on a scale of 1 to 5
+# If inverse is True, the scale is reversed. This is used for dysfunctional ratings
 def rating(level, inverse=False):
     if level == "Like it":
         value = 1
@@ -27,49 +29,76 @@ def rating(level, inverse=False):
         return 6 - value
     return value
 
-def question(feature):
-    st.info(feature)
-    col1, col2 = st.columns(2)
-    with col1:
-        feature_f = st.radio("How would you feel about this feature?", levels, key=f"{feature}_f")
-    with col2:
-        feature_d = st.radio("How would you feel if this feature was not there?", levels, key=f"{feature}_d")
-    return feature_f, feature_d
+# Read the features from the file
+# Each row contains the feature name and its functional and dysfunctional ratings
+def get_feature_ratings(survey_name):
+    # Read the features from the file
+    # No header row is included in the file
+    df = pd.read_csv(f"data/{survey_name}.csv", header=None)
+    # Set the column names
+    df.columns = ['Feature', 'Functional', 'Dysfunctional']
+    return df
 
-feature1_f, feature1_d = question("Route search")
-feature2_f, feature2_d = question("Training schedule")
-feature3_f, feature3_d = question("GPS tracking")
-feature4_f, feature4_d = question("Weather info")
-feature5_f, feature5_d = question("Social media integration")
+# Convert the ratings to a scale of 1 to 5
+def convert_ratings(df):
+    # Convert the functional ratings to a scale of 1 to 5 using rating()
+    df['Functional'] = df['Functional'].apply(rating)
+    # Convert the dysfunctional ratings to a scale of 1 to 5 using rating() with inverse=True
+    df['Dysfunctional'] = df['Dysfunctional'].apply(lambda x: rating(x, True))
+    return df
 
-# Create a dataframe with functional and dysfunctional ratings
-# on a scale of 1 to 5
-df = pd.DataFrame({
-    'Feature': ['Route search', 'Training schedule', 'GPS tracking', 'Weather info', 'Social media integration'],
-    'Functional': [rating(feature1_f, True), rating(feature2_f, True), rating(feature3_f, True), rating(feature4_f, True), rating(feature5_f, True)],
-    'Dysfunctional': [rating(feature1_d), rating(feature2_d), rating(feature3_d), rating(feature4_d), rating(feature5_d)]
-})
-# Subtract 1 from each value to make the scale 0 to 4
-df['Functional'] = df['Functional'] - 1
-df['Dysfunctional'] = df['Dysfunctional'] - 1
+# Plot the data on a Kano chart
+def plot_kano(df):
+    # Convert the ratings from levels to values on a scale of 1 to 5
+    df = convert_ratings(df)
 
-# Create a scatter plot
-fig, ax = plt.subplots()
-# Plot data points as blue circles of size 100
-ax.scatter(df['Dysfunctional'], df['Functional'], color='blue', s=100)
+    # Subtract 1 from each value to make the scale 0 to 4 to plot the data
+    df['Functional'] = df['Functional'] - 1
+    df['Dysfunctional'] = df['Dysfunctional'] - 1
 
-# Annotation for each data point with feature name
-for i, txt in enumerate(df['Feature']):
-    ax.annotate(txt, (df['Dysfunctional'][i] + 0.1, df['Functional'][i] + 0.1))
+    # Create a scatter plot
+    fig, ax = plt.subplots()
+    # Plot data points as blue circles of size 100
+    ax.scatter(df['Dysfunctional'], df['Functional'], color='blue', s=100)
 
-ax.set_xlabel('Dysfunctional (absence)')
-ax.set_ylabel('Functional (presence)')
-ax.set_title('Kano analysis')
+    # Annotation for each data point with feature name
+    for i, txt in enumerate(df['Feature']):
+        ax.annotate(txt, (df['Dysfunctional'][i] + 0.1, df['Functional'][i] + 0.1))
 
-# Show grid lines in intervals of 2
-ax.set_xticks(np.arange(0, 6, 2))
-ax.set_yticks(np.arange(0, 6, 2))
-ax.grid(True)
+    # Set the x and y axes limits
+    plt.xlim(-0.5, 4.5)
+    plt.ylim(-0.5, 4.5)
 
-# Display the scatter plot
-st.pyplot(fig)
+    # Set the x and y axes labels
+    plt.xlabel('Dysfunctional')
+    plt.ylabel('Functional')
+
+    # Set the x and y axes ticks
+    plt.xticks(np.arange(0, 5, 1))
+    plt.yticks(np.arange(0, 5, 1))
+
+    # Set the x and y axes tick labels
+    plt.gca().set_xticklabels(levels)
+    plt.gca().set_yticklabels(reversed(levels))
+
+    # Show the plot
+    st.pyplot(fig)
+
+st.header('Kano analysis')
+st.markdown('''
+Kano analysis is a method for analyzing customer requirements. 
+It is used to identify the features that customers want and the features that customers do not want. 
+''')
+
+survey_name = st.text_input('Enter the name of the survey', value='')
+
+if survey_name:
+    # Read the features from the file
+    df = get_feature_ratings(survey_name)
+    # Show the features and their ratings
+    st.subheader('Features')
+    st.dataframe(df)
+
+    # Plot the data on a Kano chart
+    st.subheader('Kano chart')
+    plot_kano(df)

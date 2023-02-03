@@ -60,19 +60,23 @@ def ask_about_features(features):
 # Ask the user a question about a feature and return the answer
 def ask_about_one_feature(feature):
     st.info(feature)
-    answer = st.radio("How would you feel about this feature?", levels, key=f"{feature}")
-    return answer
+    col1, col2 = st.columns(2)
+    with col1:
+        functional = st.radio("How would you feel about this feature?", levels, key=f"{feature} F")
+    with col2:
+        dysfunctional = st.radio("How would you feel if there was no such feature?", levels, key=f"{feature} D")
+    return functional, dysfunctional
 
 # Add the answers to the file
 # The file is a CSV file with the following columns: feature and answer
 def add_answers(filename, features, answers):
     with open(filename, 'a') as f:
         for feature, answer in zip(features, answers):
-            f.write(f"{feature},{answer}\n")
+            f.write(f"{feature},{answer[0]},{answer[1]}\n")
 
 st.header('Survey')
 st.markdown('''
-This is a survey app.
+Thank you for taking the time to complete this survey.
 ''')
 
 # Create a form with a feature and a submit button
@@ -91,4 +95,3 @@ if survey_submitted:
         release_lock(f"data/{survey_name}.lock")
     else:
         st.error("A problem occurred. Try again later.")
-
