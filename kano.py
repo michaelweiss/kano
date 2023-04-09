@@ -118,7 +118,7 @@ def plot_kano(df):
     st.markdown('''
     The Kano chart shows the average functional and dysfunctional ratings for each feature.
     ''')
-    with st.expander('Show average values')
+    with st.expander('Show average values'):
         st.dataframe(df)
 
     transform_value = st.checkbox('Transform values', value=False)
