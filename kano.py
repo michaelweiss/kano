@@ -99,8 +99,8 @@ def compute_average_ratings(df):
     return df
 
 # Create a multi-line string from a string
-def multi_line_text(txt, max_width=12):
-    lines = textwrap.wrap(txt, width=max_width, break_long_words=False)
+def multi_line_text(txt, max_width=12, max_lines=3):
+    lines = textwrap.wrap(txt, width=max_width, break_long_words=False, max_lines=max_lines)
     return '\n'.join(lines)
 
 # Plot the data on a Kano chart
